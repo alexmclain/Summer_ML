@@ -1,0 +1,5 @@
+"0","gg_miss_case(data, show_pct = T)
+"
+"2","Error in gg_miss_case(data, show_pct = T) : 
+  could not find function ""gg_miss_case""
+"

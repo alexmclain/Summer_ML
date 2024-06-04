@@ -1,0 +1,8 @@
+"0","# Set seed for reproducibility"
+"0","set.seed(123)"
+"0",""
+"0","# Split data into training and test sets"
+"0","library(caret)"
+"0","train_index <- createDataPartition(data_model$BODYFAT, p = 0.7, list = FALSE)"
+"0","training_data <- data_model[train_index, ]"
+"0","testing_data <- data_model[-train_index, ]"

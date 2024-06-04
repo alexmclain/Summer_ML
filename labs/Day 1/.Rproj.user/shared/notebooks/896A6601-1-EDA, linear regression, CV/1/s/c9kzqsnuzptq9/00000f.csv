@@ -1,0 +1,3 @@
+"0","correlation_table <- cor(data)"
+"0",""
+"0","corrplot(correlation_table, method = 'number') # colorful numbers"
