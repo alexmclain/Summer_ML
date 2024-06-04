@@ -19,11 +19,9 @@ library(visdat)
 library(naniar)
 ```
 
-
 ## Reading and formatting the data
 
 We will use the https://archive.ics.uci.edu/dataset/579/myocardial+infarction+complications
-
 
 ```{r}
 raw_data <- read_csv("raw_data/MI.data", col_names = FALSE)
@@ -267,7 +265,6 @@ raw_data |>
   ) -> data
 ```
 
-
 ## Basic summary
 
 ```{r}
@@ -275,22 +272,21 @@ summary(data[,-outcomes_index])
 summary(data[,outcomes_index])
 ```
 
-
 ## Duplicate Records
 
 ```{r}
 sum(duplicated(data$ID))
 ```
+
 If there are repeated values you have to think about what you need for your particular problem. You can handle that case with functions like:
 
-- group_by()
-- filter()
-- first()
-- last()
-- summarise()
+-   group_by()
+-   filter()
+-   first()
+-   last()
+-   summarise()
 
 ## Missing Values
-
 
 ```{r}
 vis_dat(data)
@@ -344,7 +340,6 @@ data_pre_selec <- data[cases_to_keep, variables_to_keep]
 dim(data_pre_selec)
 ```
 
-
 ## Data Visualization
 
 ```{r}
@@ -353,10 +348,6 @@ data_pre_selec |>
   select(-ID) |> 
   ggpairs()
 ```
-
-
-
-
 
 ## Feature Engineering and Normalization
 
@@ -377,7 +368,6 @@ data_pre_selec |>
   map(shapiro.test)
 ```
 
-
 ```{r}
 data_pre_selec |> 
   select_if(is.numeric) |> 
@@ -396,8 +386,6 @@ data_pre_selec |>
   map(shapiro.test)
 ```
 
-
-
 ## Standardize
 
 ```{r}
@@ -413,12 +401,9 @@ data_pre_selec |>
 summary(numerics_standardized)
 ```
 
-
-
 Also for the Box-Cox Transformations
 
 check `boxCoxVariable()` in `car` and `boxcox()` in `MASS`
-
 
 ## Outliers
 
@@ -428,7 +413,6 @@ numerics_standardized |>
   ggplot(aes(x = variable, y = value)) + 
   geom_boxplot()
 ```
-
 
 ```{r}
 cbind(data_pre_selec, numerics_standardized) |> 
@@ -443,10 +427,8 @@ cbind(data_pre_selec, numerics_standardized) |>
 summary(data_no_outliers)
 ```
 
-
 ## Export data
 
 ```{r}
 write.csv(data_no_outliers, file = "processed_data/data_no_outliers.csv")
 ```
-
