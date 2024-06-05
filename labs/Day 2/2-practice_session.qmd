@@ -1,0 +1,25 @@
+---
+title: "EDA"
+format: html
+editor: source
+---
+
+## Libraries
+
+## Read data
+
+## Create the outcomes "any complication" and death
+
+## Feature engeneering 
+
+Some of the factors we used as predictors have very few "yes". Which variables can we put together in a one yes or no variable.
+
+## Imputation
+
+Let us impute mode and median values.
+
+## Data visualization
+
+At the time of admission, what variables seem related to any complication and death
+
+hint: delete those variable that are not measured at time of admission and explore the predictors against those two outcomes

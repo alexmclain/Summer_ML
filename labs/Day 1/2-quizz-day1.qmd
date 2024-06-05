@@ -1,0 +1,111 @@
+---
+title: "EDA"
+format: html
+editor: visual
+---
+
+# Loading libraries
+
+We will use when possible [tidyverse](https://www.tidyverse.org/)
+
+```{r}
+library(MASS) # step
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(corrplot)) install.packages("corrplot")
+if(!require(car)) install.packages("car") # For VIF calculation
+```
+
+# Load the data
+
+```{r}
+raw_data <- 
+
+colnames(data) <- str_to_upper(colnames(raw_data))
+  
+data_model <- 
+```
+
+# Compare models using CV
+
+First. split the data in training and test set. We will not use the test set until we have our final model. In this exercise, we want to compare the models without `weight` since it has the highest VIF. Let us see if the predictive performance improves by deleting it.
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Split data into training and test sets
+library(caret)
+train_index <- createDataPartition(data_model$BODYFAT, p = 0.7, list = FALSE)
+training_data <- data_model[train_index, ]
+testing_data <- data_model[-train_index, ]
+```
+
+```{r}
+# Define the number of folds for cross-validation
+K <- 10
+
+# Create an empty vector to store the cross-validation errors
+cv_errors <- matrix(nrow = K,ncol = 3) # 4 models to compare
+
+# Create indices for cross-validation folds
+
+# Perform cross-validation
+for (fold in 1:K) {
+  # Extract training and test sets for this fold
+  
+  # Fit the full model on the training folds
+  full_model <- 
+  
+  # Reduced the model
+  reduced_model <- 
+  
+  # VIF
+  vifs <- 
+  variable_to_remove <- variable.names(reduced_model)[which.max(vifs) + 1] # +1 for intercept
+  vif_model <- update(
+    reduced_model,
+    as.formula(paste(". ~ . - ",variable_to_remove))
+    )
+  
+  # Predict on the test data
+  predictions_full <- 
+  predictions_reduced_model <- 
+  predictions_vif <- 
+  
+  # Calculate the mean squared error for this fold
+  cv_errors[fold,1] <- 
+  cv_errors[fold,2] <- 
+  cv_errors[fold,3] <- 
+}
+
+# Calculate the mean cross-validation error
+cv_errors
+mean_cv_error <- colMeans(cv_errors)
+mean_cv_error
+```
+
+# Choose your model and evaluate its performance
+
+Now we have to train our model in the whole training data and evaluate its performance in the test set
+
+```{r}
+# Fit the full model on the training data
+
+# Reduce it
+
+# predict
+
+# EPE
+```
+
+# Model to deploy
+
+Which model would you implement for new data? fit it
+
+```{r}
+# Fit the full model on the whole data
+
+# reduce it
+
+# Present it
+```

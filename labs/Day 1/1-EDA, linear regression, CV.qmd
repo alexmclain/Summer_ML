@@ -1,0 +1,274 @@
+---
+title: "EDA"
+format: html
+editor: visual
+---
+
+# Loading libraries
+
+We will use when possible [tidyverse](https://www.tidyverse.org/)
+
+```{r}
+library(MASS) # step
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(corrplot)) install.packages("corrplot")
+if(!require(car)) install.packages("car") # For VIF calculation
+```
+
+# Data sources
+
+-   See this post: <https://learn.g2.com/open-data-sources>
+
+-   [Bioconductor](https://www.bioconductor.org/install/)
+
+-   [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/)
+
+-   [Kaggle](https://www.kaggle.com/datasets?sortBy=relevance&group=featured&search=tag%3A%27internet%27)
+
+# Body Fat Prediction Dataset
+
+Lets get the data from:
+
+<https://www.kaggle.com/datasets/fedesoriano/body-fat-prediction-dataset/data>
+
+## Reading and formatting the data 
+
+```{r}
+raw_data <- read_csv("raw_data/bodyfat.csv")
+
+str(raw_data)
+
+data <- raw_data
+
+colnames(data) <- str_to_upper(colnames(raw_data))
+  
+str(data)
+head(data)
+```
+
+## Basic summary
+
+```{r}
+summary(data)
+```
+
+## Data Visualization
+
+Let us use ggplot2 instead of r base package
+
+```{r}
+data |> 
+  ggplot(aes(x = BODYFAT)) +
+  geom_histogram() +
+  geom_vline(xintercept = 25, color = "yellow") +
+  geom_vline(xintercept = 35, color = "red") + 
+  labs(
+    title = "Bodyfat distribution",
+    # x = "",
+    y = "Count",
+    caption = "In men,\n
+    Healthy: Less than 25% \n
+    At Risk: 25% - 35% \n
+    Obese: Over 35%"
+    ) -> p1
+
+p1
+
+ggsave(filename = "figures/bodyfat_hist.png", plot = p1, width = 6, height = 4)
+```
+
+```{r}
+data |> 
+  ggplot(aes(x = factor("bodyfat"), y = BODYFAT)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 25, color = "yellow") +
+  geom_hline(yintercept = 35, color = "red")+ 
+  labs(
+    title = "Bodyfat boxplot",
+    x = "",
+    y = "Percentage",
+    caption = "In men,\n
+    Healthy: Less than 25% \n
+    At Risk: 25% - 35% \n
+    Obese: Over 35%"
+    ) -> p2
+
+p2
+
+ggsave(filename = "figures/bodyfat_boxplot.png", 
+       plot = p2, width = 6, height = 4)
+```
+
+
+
+```{r}
+data |> 
+  ggplot(aes(x = ABDOMEN, y = BODYFAT)) +
+  geom_point() + 
+  geom_smooth(
+    method = "lm"
+    ) -> p3
+
+p3
+
+ggsave(filename = "figures/bodyfat_vs_abdoment.png", 
+       plot = p3, width = 6, height = 4)
+```
+
+## Correlation table
+
+Useful for multicollinearity checks
+
+```{r}
+correlation_table <- cor(data)
+
+corrplot(correlation_table, method = 'number') # colorful numbers
+```
+
+```{r}
+data |> 
+  select(
+    -DENSITY
+  ) |> 
+  na.omit() -> data_model
+```
+
+## Fitting a linear model
+
+```{r}
+bf_mod <- lm(BODYFAT ~ ., data_model)
+summary(bf_mod)
+```
+
+## Performance
+
+```{r}
+(RSS_n <- mean(bf_mod$residuals^2))
+
+(RSS_n_p <- sum(bf_mod$residuals^2)/
+  (nrow(data_model) - length(bf_mod$coefficients)))
+```
+
+## Variable selection
+
+We will do cross-validation (CV) with model reduction within each loop as mentioned in the class
+
+```{r}
+# Define the number of folds for cross-validation
+K <- 5
+
+# Create an empty vector to store the cross-validation errors
+cv_errors <- numeric(K)
+
+# Create indices for cross-validation folds
+set.seed(123) # for reproducibility
+cv_indices <- rep_len(1:K, nrow(data_model))
+cv_indices <- sample(cv_indices, nrow(data_model)) 
+table(cv_indices)
+
+# Perform cross-validation
+for (fold in 1:K) {
+  # Extract training and test sets for this fold
+  train_data <- data_model[cv_indices != fold, ]
+  test_data <- data_model[cv_indices == fold, ]
+  
+  # Fit the model on the training data
+  full_model <- lm(BODYFAT ~ ., data = train_data)
+  
+  # Reduced the model
+  reduced_model <- stepAIC(full_model,trace = F)
+  
+  # Predict on the test data
+  predictions <- predict(reduced_model, newdata = test_data)
+  
+  # Calculate the mean squared error for this fold
+  cv_errors[fold] <- mean((predictions - test_data[["BODYFAT"]])^2)
+}
+
+# Calculate the mean cross-validation error
+cv_errors
+mean_cv_error <- mean(cv_errors)
+mean_cv_error
+```
+
+## Final model
+
+```{r}
+# Fit the model on the whole data
+full_model <- lm(BODYFAT ~ ., data = data_model)
+
+# Reduced the model
+final_model <- stepAIC(full_model,trace = F)
+
+# again why CV is important
+(RSS_n <- mean(final_model$residuals^2))
+
+(RSS_n_p <- sum(final_model$residuals^2)/
+  (nrow(data_model) - length(final_model$coefficients)))
+```
+```{r}
+summary(final_model)
+```
+
+## Model diagnostics
+
+### Residual Plots
+
+#### Residuals vs. Fitted Values: 
+
+This plot checks for linearity in the relationship between the independent 
+variables and the residuals. A random scatter around a horizontal line indicates 
+no strong patterns or curvature, suggesting a linear relationship. 
+The spread of the residuals should be relatively constant, 
+indicating homoscedasticity (equal variance).
+
+```{r}
+ggplot(
+  data = NULL,
+  aes(x = final_model$fitted.values, y = final_model$residuals)
+  ) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(
+    title = "Residuals vs Fitted Values",
+    x = "Fitted Values",
+    y = "Residuals"
+    )
+```
+
+#### Normal Q-Q Plot: 
+
+This plot compares the distribution of your residuals to a normal distribution. 
+If the points roughly follow a straight diagonal line, it suggests the residuals
+are normally distributed, which is an assumption of linear regression.
+
+```{r}
+ggplot(
+  data = NULL,
+  aes(sample = final_model$residuals)) +
+  stat_qq() + 
+  stat_qq_line() +
+  labs(
+    title = "Normal Q-Q Plot",
+    x = "Sample Quantiles",
+    y = "Standard Normal Quantiles"
+    )
+
+```
+
+### Multicollinearity Checks
+
+#### correlation matrix 
+
+See above.
+
+#### Variance Inflation Factor (VIF): 
+
+This metric quantifies the inflation of a variable's variance due to multicollinearity. 
+Values above 5 or 10 (varies in the literature) are considered problematic.
+
+```{r}
+vif_values <- vif(final_model)
+vif_values
+```
+

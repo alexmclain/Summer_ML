@@ -1,0 +1,1 @@
+{"frames":[{"func":"replace(pull(na.omit(mutate_all(select(select_if(data_pre_selec, \n    is.numeric), -ID), .funs = function(x) {\n    1/x^2\n})), S_AD_ORIT), list = . == Inf, NA)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error: object '.' not found\n"}
