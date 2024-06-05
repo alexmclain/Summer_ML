@@ -1,0 +1,1 @@
+"0","rf_model <- randomForest(as.factor(DIED) ~ ., data = training_data, ntree = 500, mtry = 2)"

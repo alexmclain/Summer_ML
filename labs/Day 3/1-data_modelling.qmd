@@ -1,0 +1,179 @@
+---
+title: "EDA"
+format: html
+editor: visual
+---
+
+# Libraries
+
+```{r}
+library(tidyverse)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(pROC)
+library(randomForest)
+```
+
+
+# Read data
+
+```{r}
+data_to_model <- readRDS(file = "processed_data/data_to_model.rds")
+summary(data_to_model)
+```
+
+
+# Select predictors
+
+```{r}
+data_to_model |> 
+  select(
+    DIED, # Y, outcome, target, what we want to predict
+    # Predictors
+    # We will use all days since admission,
+    AGE:STENOK_AN,
+    NR_ABNORMAL:ZAB_LEG_ABNORMAL,
+    # NR_ABNORMAL:FIBR_TER_ABNORMAL,
+    # O_L_POST:IM_PG_P,
+    # GIPO_K,
+    # GIPER_NA,
+    # TIME_B_S:P_IM_STEN,
+    ends_with("_scaled")
+  )  -> data_to_model_death
+
+
+
+summary(data_to_model_death)
+```
+
+# Split the data
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Split data into training and test sets
+train_index <- createDataPartition(data_to_model_death$DIED, p = 0.7, list = FALSE)
+training_data <- data_to_model_death[train_index, ]
+testing_data <- data_to_model_death[-train_index, ]
+```
+
+# Fitting the models
+
+## Logistic regression
+
+```{r}
+logistic_model_full <- glm(
+  formula = as.factor(DIED) ~ .,
+  data = training_data, 
+  family = binomial
+  )
+```
+
+```{r}
+summary(logistic_model_full)
+```
+
+
+```{r}
+logistic_model_reduced <- step(logistic_model_full, trace = F)
+```
+
+```{r}
+summary(logistic_model_reduced)
+```
+
+
+## CART
+
+
+```{r}
+cart_full_tree <- rpart(formula = as.factor(DIED) ~ .  , data = training_data)
+
+cart_prunned_tree<- prune(
+  cart_full_tree, 
+  cp = 0.025
+  )
+```
+
+```{r}
+rpart.plot(cart_prunned_tree)
+```
+
+## random forest (extra)
+
+```{r}
+rf_model <- randomForest(as.factor(DIED) ~ ., data = training_data, ntree = 500, mtry = 2)
+```
+
+
+# Prediction in test set
+
+```{r}
+predicted_probability_logistic <- predict(
+  logistic_model_reduced, 
+  newdata = testing_data, 
+  type = "response"
+  )
+
+predicted_probability_cart <- predict(
+  cart_prunned_tree, 
+  newdata = testing_data, 
+  type = "prob"
+  )[,2]
+
+predicted_probability_rf <- predict(
+  rf_model, 
+  newdata = testing_data, 
+  type = "prob"
+  )[,2]
+```
+
+# ROC analysis
+
+```{r}
+roc_logistic <- roc(response = testing_data$DIED, predictor = predicted_probability_logistic)
+roc_cart <- roc(response = testing_data$DIED, predictor = predicted_probability_cart)
+roc_rf <- roc(response = testing_data$DIED, predictor = predicted_probability_rf)
+```
+
+```{r}
+roc_logistic$auc
+roc_cart$auc
+roc_rf$auc
+```
+
+
+
+```{r}
+ggroc(
+  list(
+    logistic = roc_logistic,
+    cart = roc_cart,
+    rf = roc_rf
+    )
+  )
+```
+
+## best cutoff point
+
+```{r}
+best_cutoff <- coords(
+  roc_logistic, 
+  "best", 
+  best.method = "closest.topleft",
+  ret = "threshold"
+  )[1,1]
+```
+
+```{r}
+predicted_outcome <- ifelse(predicted_probability_cart > best_cutoff, TRUE, FALSE)
+```
+
+
+```{r}
+table(predicted_outcome, testing_data$DIED) |> 
+  confusionMatrix()
+```
+

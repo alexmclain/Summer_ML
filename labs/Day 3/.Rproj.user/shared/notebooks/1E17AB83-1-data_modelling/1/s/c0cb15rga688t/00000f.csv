@@ -1,0 +1,6 @@
+"0","cart_full_tree <- rpart(formula = as.factor(DIED) ~ .  , data = training_data)"
+"0",""
+"0","cart_prunned_tree<- prune("
+"0","  cart_full_tree, "
+"0","  cp = 0.025"
+"0","  )"

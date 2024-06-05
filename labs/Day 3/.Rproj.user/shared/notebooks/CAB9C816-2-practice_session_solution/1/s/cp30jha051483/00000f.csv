@@ -1,0 +1,39 @@
+"0","library(MASS) # step"
+"2","
+Attaching package: ‘MASS’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    select
+
+"
+"0","library(tidyverse) "
+"0","library(readxl)"
+"0","library(corrplot) "
+"2","corrplot 0.92 loaded
+"
+"0","library(car)  # For VIF calculation"
+"2","Loading required package: carData
+"
+"2","
+Attaching package: ‘car’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    recode
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    some
+
+"
+"0","library(GGally) "
+"2","Registered S3 method overwritten by 'GGally':
+  method from   
+  +.gg   ggplot2
+"
+"0","library(visdat)"
+"0","library(naniar)"

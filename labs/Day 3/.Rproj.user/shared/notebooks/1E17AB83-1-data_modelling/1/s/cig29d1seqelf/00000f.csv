@@ -1,0 +1,1 @@
+"0","logistic_model_reduced <- step(logistic_model_full, trace = F)"
