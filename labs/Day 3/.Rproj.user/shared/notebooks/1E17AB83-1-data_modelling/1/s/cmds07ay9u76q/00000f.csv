@@ -1,5 +1,0 @@
-"0","logistic_model_full <- glm("
-"0","  formula = as.factor(DIED) ~ .,"
-"0","  data = training_data, "
-"0","  family = binomial"
-"0","  )"

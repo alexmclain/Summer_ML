@@ -1,6 +1,0 @@
-"0","cbind(data_pre_selec, numerics_standardized) |> "
-"0","  as.data.frame() |> "
-"0","  filter_at("
-"0","    vars(AGE_scaled:ROE_scaled),"
-"0","    all_vars(. < 3.5)"
-"0","    ) -> data_no_outliers"

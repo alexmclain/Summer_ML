@@ -1,5 +1,0 @@
-"0","data |> "
-"0","  select("
-"0","    -DENSITY"
-"0","  ) |> "
-"0","  na.omit() -> data_model"

@@ -1,6 +1,0 @@
-"0","best_cutoff <- coords("
-"0","  roc_logistic, "
-"0","  ""best"", "
-"0","  best.method = ""closest.topleft"","
-"0","  ret = ""threshold"""
-"0","  )[1,1]"

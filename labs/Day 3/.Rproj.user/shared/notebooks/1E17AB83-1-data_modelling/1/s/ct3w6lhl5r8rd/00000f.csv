@@ -1,1 +1,0 @@
-"0","predicted_outcome <- ifelse(predicted_probability_cart > best_cutoff, TRUE, FALSE)"
